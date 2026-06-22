@@ -195,9 +195,12 @@ class InvestigationPipeline:
             context.impact_result = await self._impact_forecast_agent.run(
                 context.parsed_intent, context.root_cause_result
             )
+            scenario = context.impact_result.scenario_type
+            headline = context.impact_result.headline_total_exposure_cr
+            label = "Value captured" if scenario == "opportunity" else "Exposure"
             yield self._completed(
                 self._impact_forecast_agent, 3, impact_started_at,
-                f"Exposure: ₹{context.impact_result.headline_total_exposure_cr:.2f} Cr",
+                f"{label}: ₹{headline:.2f} Cr",
             )
         except Exception as error:
             any_stage_degraded = True
@@ -567,7 +570,16 @@ class InvestigationPipeline:
         from app.constants import ALL_DATASET_NAMES, ALL_PRODUCT_TYPES, ALL_ZONES
 
         lowered = question.lower()
-        detected_zone = next((zone for zone in ALL_ZONES if zone.lower() in lowered), None)
+        # Match the longest zone name first so "Northwest"/"Southeast" win over
+        # their "North"/"South" prefixes.
+        detected_zone = next(
+            (
+                zone
+                for zone in sorted(ALL_ZONES, key=len, reverse=True)
+                if zone.lower() in lowered
+            ),
+            None,
+        )
         detected_product = next(
             (product for product in ALL_PRODUCT_TYPES if product.lower() in lowered), None
         )
@@ -597,11 +609,12 @@ class InvestigationPipeline:
             if context.root_cause_result and context.root_cause_result.primary_root_cause
             else "Root cause could not be determined automatically."
         )
-        exposure_text = (
-            f"₹{context.impact_result.headline_total_exposure_cr:.2f} Cr estimated exposure."
-            if context.impact_result and context.impact_result.headline_total_exposure_cr
-            else "Financial exposure could not be quantified."
-        )
+        if context.impact_result and context.impact_result.headline_total_exposure_cr:
+            _scenario = context.impact_result.scenario_type
+            _label = "value captured" if _scenario == "opportunity" else "estimated exposure"
+            exposure_text = f"₹{context.impact_result.headline_total_exposure_cr:.2f} Cr {_label}."
+        else:
+            exposure_text = "Financial impact could not be quantified."
         analysis_text = (
             context.analysis_result.overall_summary
             if context.analysis_result and context.analysis_result.overall_summary

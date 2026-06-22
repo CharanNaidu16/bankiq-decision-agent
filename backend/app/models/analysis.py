@@ -7,6 +7,8 @@ configured thresholds, and aligns event-log entries to metric movements.
 
 from __future__ import annotations
 
+import json
+
 from pydantic import BaseModel, Field
 
 
@@ -72,3 +74,41 @@ class AnalysisResult(BaseModel):
     timeline_summary: str = ""
     overall_summary: str = ""
     degraded: bool = False
+
+    def to_prompt_json(self, max_anomalies: int = 15) -> str:
+        """Serialize a compact view of the analysis for downstream prompts.
+
+        The full result can carry dozens of anomalies (a turnaround zone moves
+        almost every metric, in both directions, across all four quarters). Feeding
+        that verbatim to later agents bloats their prompts and can exceed the
+        provider's per-request token limit. This view keeps the per-dataset
+        summaries plus only the most material anomalies (ranked by absolute
+        percentage change), which is all the root-cause and report stages need.
+
+        Args:
+            max_anomalies: Maximum number of top-ranked anomalies to include.
+
+        Returns:
+            A compact (no-indent) JSON string of the trimmed analysis.
+        """
+        ranked = sorted(
+            self.flagged_anomalies,
+            key=lambda anomaly: abs(anomaly.delta_pct) if anomaly.delta_pct is not None else 0.0,
+            reverse=True,
+        )[:max_anomalies]
+        payload = {
+            "overall_summary": self.overall_summary,
+            "timeline_summary": self.timeline_summary,
+            "dataset_summaries": [
+                {
+                    "dataset": finding.dataset,
+                    "summary": finding.summary,
+                    "anomaly_count": len(finding.anomalies),
+                }
+                for finding in self.findings
+            ],
+            "top_anomalies": [anomaly.model_dump() for anomaly in ranked],
+            "total_anomaly_count": len(self.flagged_anomalies),
+            "degraded": self.degraded,
+        }
+        return json.dumps(payload, default=str)

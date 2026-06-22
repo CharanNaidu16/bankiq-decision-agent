@@ -79,7 +79,17 @@ ZONE_SOUTH: Final[str] = "South"
 ZONE_EAST: Final[str] = "East"
 ZONE_WEST: Final[str] = "West"
 ZONE_CENTRAL: Final[str] = "Central"
-ALL_ZONES: Final[tuple[str, ...]] = (ZONE_NORTH, ZONE_SOUTH, ZONE_EAST, ZONE_WEST, ZONE_CENTRAL)
+ZONE_NORTHWEST: Final[str] = "Northwest"
+ZONE_SOUTHEAST: Final[str] = "Southeast"
+ALL_ZONES: Final[tuple[str, ...]] = (
+    ZONE_NORTH,
+    ZONE_SOUTH,
+    ZONE_EAST,
+    ZONE_WEST,
+    ZONE_CENTRAL,
+    ZONE_NORTHWEST,
+    ZONE_SOUTHEAST,
+)
 
 QUARTER_Q1: Final[str] = "Q1 2025"
 QUARTER_Q2: Final[str] = "Q2 2025"
@@ -144,7 +154,12 @@ FORECAST_HORIZON_DAYS: Final[tuple[int, ...]] = (30, 60, 90)
 # One bounded retry when the model returns text that does not parse as the
 # expected JSON schema.
 LLM_JSON_PARSE_MAX_RETRIES: Final[int] = 1
-# Cap on the response token budget for a single agent call.
+# Cap on the response token budget for a single agent call. Kept modest because
+# the reserved output budget counts against the provider's tokens-per-minute
+# limit (Groq free tier allows ~12k TPM); a large reservation plus the prompt can
+# exceed that and trigger a 413/429. Downstream agents receive a *compact*
+# analysis summary (see AnalysisResult.to_prompt_json) rather than every anomaly,
+# so this budget is comfortably sufficient for every stage's output.
 LLM_MAX_OUTPUT_TOKENS: Final[int] = 4096
 
 # ---------------------------------------------------------------------------

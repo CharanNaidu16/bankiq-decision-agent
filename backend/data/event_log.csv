@@ -1,0 +1,13 @@
+event_id,date,zone,event_type,description,severity,affected_headcount,affected_product
+EVT-2025-0814-STH,2025-08-14,South,resignation,"3 senior underwriters resigned simultaneously from the South zone Personal Loan desk, removing the bulk of senior credit-approval capacity.",Critical,3,Personal Loan
+EVT-2025-0820-STH,2025-08-20,South,training_suspended,Underwriter onboarding and training program suspended in South zone; remaining staff redeployed to clear the Personal Loan backlog.,High,18,Personal Loan
+EVT-2025-0205-NTH,2025-02-05,North,policy_change,Revised KYC documentation checklist rolled out for Home Loans.,Low,0,Home Loan
+EVT-2025-0418-WST,2025-04-18,West,system_outage,Core banking system outage for 4 hours during scheduled maintenance.,Medium,0,Auto Loan
+EVT-2025-0612-EST,2025-06-12,East,audit,Routine internal compliance audit completed with no major findings.,Low,0,Business Loan
+EVT-2025-0722-CTL,2025-07-22,Central,leadership_change,Planned retirement and succession of the Central zone operations head.,Medium,1,Home Loan
+EVT-2025-0909-NTH,2025-09-09,North,training,Quarterly refresher training completed for all credit officers.,Low,0,Personal Loan
+EVT-2025-1003-WST,2025-10-03,West,policy_change,Auto Loan interest-rate slab revised in line with central bank guidance.,Low,0,Auto Loan
+EVT-2025-0410-NWS,2025-04-10,Northwest,system_upgrade,"New digital lending platform launched across the Northwest zone, enabling instant pre-approval and removing several manual processing steps.",Medium,0,Personal Loan
+EVT-2025-0815-NWS,2025-08-15,Northwest,training,"Northwest zone completed an intensive underwriter upskilling program, lifting training completion above 90% and shortening processing times.",Low,0,Business Loan
+EVT-2025-1105-STE,2025-11-05,Southeast,fraud_detected,"Organized fraud ring uncovered in the Southeast zone Business Loan portfolio; multiple falsified-collateral applications identified across branches.",Critical,0,Business Loan
+EVT-2025-1118-STE,2025-11-18,Southeast,regulatory_action,"Regulator initiated a special compliance review of the Southeast zone following the fraud discovery; several loan files frozen pending audit.",High,0,Business Loan

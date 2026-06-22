@@ -49,7 +49,7 @@ class RootCauseAgent(BaseAgent):
         event_log_markdown = self.dataset_repository.serialize_dataset_slice_to_markdown(
             DATASET_EVENT_LOG, zones=focus_zones
         )
-        anomalies_json = analysis_result.model_dump_json(indent=2)
+        anomalies_json = analysis_result.to_prompt_json()
         user_prompt = self._build_user_prompt(
             parsed_intent, anomalies_json, event_log_markdown
         )

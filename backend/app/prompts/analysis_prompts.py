@@ -12,18 +12,23 @@ agent's job. You report WHAT changed, WHERE, WHEN, and BY HOW MUCH.
 
 WHAT TO DO:
 1. For the focus zone and KPI, compute quarter-over-quarter deltas (focus quarter vs \
-comparison quarter) AND cross-zone deltas (focus zone vs the average of the other zones in the \
-same quarter).
-2. Flag an anomaly whenever a metric moves beyond a material threshold. Treat these as material:
-   - approval_rate drop >= 5%
-   - NPS drop >= 8 points
-   - churn_rate increase >= 15%
-   - avg_processing_days increase >= 25%
-   - training_completion_pct drop >= 20%
-   - headcount drop >= 10%
-   - avg_wait_mins increase >= 20%
-   - npa_rate increase >= 10%
-   - any other metric moving >= 10% versus its baseline.
+comparison quarter). When the data spans all four quarters for a zone, also assess the \
+full-year trajectory (Q1 -> Q4) so a sustained trend, turnaround, or improvement is captured, \
+not just a single step. ONLY compute cross-zone deltas (focus zone vs the average of the other \
+zones in the same quarter) when rows for other zones are present in the data; if a single zone \
+was supplied, skip the cross-zone comparison rather than inventing peer values.
+2. Flag an anomaly whenever a metric moves beyond a material threshold in EITHER direction \
+(both improvements and declines are noteworthy). Treat these as material:
+   - approval_rate change >= 5% (drop OR rise)
+   - NPS change >= 8 points (drop OR rise)
+   - churn_rate change >= 15% (spike OR drop)
+   - avg_processing_days change >= 25% (increase OR decrease)
+   - training_completion_pct change >= 20% (drop OR rise)
+   - headcount change >= 10% (drop OR rise)
+   - avg_wait_mins change >= 20% (increase OR decrease)
+   - npa_rate change >= 10% (increase OR decrease)
+   - any other metric moving >= 10% versus its baseline in either direction.
+   Use direction "increase" or "decrease" to record which way it moved.
 3. For each anomaly record: dataset, metric, zone, quarter, product (if applicable), \
 baseline_value, observed_value, delta_pct (signed), direction ("increase"/"decrease"), \
 severity ("low"/"medium"/"high"/"critical"), and a one-sentence description.

@@ -47,25 +47,25 @@ class ExecutiveReportAgent(BaseAgent):
         Returns:
             The composed user prompt string.
         """
+        # Pass compact JSON (no indentation) and a trimmed analysis summary rather
+        # than every anomaly: the report stage is the largest call, and the full
+        # analysis can push the request past the provider's per-request token
+        # limit (see AnalysisResult.to_prompt_json).
         intent_json = (
-            context.parsed_intent.model_dump_json(indent=2)
-            if context.parsed_intent
-            else "{}"
+            context.parsed_intent.model_dump_json() if context.parsed_intent else "{}"
         )
         analysis_json = (
-            context.analysis_result.model_dump_json(indent=2)
+            context.analysis_result.to_prompt_json()
             if context.analysis_result
             else "{}"
         )
         root_cause_json = (
-            context.root_cause_result.model_dump_json(indent=2)
+            context.root_cause_result.model_dump_json()
             if context.root_cause_result
             else "{}"
         )
         impact_json = (
-            context.impact_result.model_dump_json(indent=2)
-            if context.impact_result
-            else "{}"
+            context.impact_result.model_dump_json() if context.impact_result else "{}"
         )
         return (
             f"ORIGINAL QUESTION\n{context.question}\n\n"

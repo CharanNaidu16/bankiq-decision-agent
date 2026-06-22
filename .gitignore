@@ -14,9 +14,6 @@ env/
 .env
 .env.local
 
-# ---- Generated data (keep the folder, ignore the CSVs) ----
-backend/data/*.csv
-
 # ---- Node / Vite ----
 node_modules/
 dist/

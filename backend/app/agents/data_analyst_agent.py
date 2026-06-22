@@ -31,9 +31,15 @@ class DataAnalystAgent(BaseAgent):
     async def run(self, parsed_intent: ParsedIntent) -> AnalysisResult:
         """Analyze the scoped datasets and return flagged anomalies.
 
-        Full data (all zones, all quarters) is supplied so the LLM can compute
-        both quarter-over-quarter and cross-zone deltas. The event log is always
-        included unfiltered so the triggering event stays in context.
+        When the question names a focus zone, the analysis is scoped to that zone
+        across all four quarters: this keeps the investigation on the zone that
+        was actually asked about, exposes the full-year trajectory (essential for
+        turnaround/trend questions), and bounds the serialized context so a
+        verbose, many-anomaly analysis does not overflow the output budget. When
+        no zone is named, all zones are supplied for the focus/comparison quarters
+        so cross-zone comparisons remain possible. The event log is always
+        included (filtered to the same zone) so the triggering event stays in
+        context.
 
         Args:
             parsed_intent: The structured investigation scope.
@@ -42,18 +48,25 @@ class DataAnalystAgent(BaseAgent):
             The :class:`AnalysisResult` with per-dataset findings and a flat,
             de-duplicated anomaly list.
         """
-        # Scope to the comparison + focus quarters across all zones: enough for
-        # both quarter-over-quarter and cross-zone deltas, while keeping the
-        # serialized context (and token cost) small. The event log is always
-        # included unfiltered by the repository.
-        scoped_quarters = [
-            quarter
-            for quarter in (parsed_intent.comparison_quarter, parsed_intent.focus_quarter)
-            if quarter
-        ] or None
-        serialized_data = self.dataset_repository.serialize_datasets_for_analysis(
-            parsed_intent.target_datasets, quarters=scoped_quarters
-        )
+        if parsed_intent.focus_zone:
+            # Single named zone: all quarters, that zone only.
+            serialized_data = self.dataset_repository.serialize_datasets_for_analysis(
+                parsed_intent.target_datasets, zones=[parsed_intent.focus_zone]
+            )
+        else:
+            # No zone named: all zones, scoped to the comparison + focus quarters
+            # so cross-zone deltas are possible without serializing everything.
+            scoped_quarters = [
+                quarter
+                for quarter in (
+                    parsed_intent.comparison_quarter,
+                    parsed_intent.focus_quarter,
+                )
+                if quarter
+            ] or None
+            serialized_data = self.dataset_repository.serialize_datasets_for_analysis(
+                parsed_intent.target_datasets, quarters=scoped_quarters
+            )
         user_prompt = self._build_user_prompt(parsed_intent, serialized_data)
         analysis_result = await self._invoke_llm(
             system_prompt=ANALYSIS_SYSTEM_PROMPT,

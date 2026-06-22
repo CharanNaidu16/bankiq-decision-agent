@@ -139,10 +139,10 @@ Configure credentials (from the project root):
 cp .env.example .env      # then edit GROQ_API_KEY (get one at https://console.groq.com/keys)
 ```
 
-Generate the seven synthetic datasets, then run the API:
+The seven datasets ship with the repository (in `backend/data/`), so no data step is
+needed — just run the API:
 
 ```bash
-python scripts/generate_synthetic_data.py
 uvicorn app.main:app --reload          # http://127.0.0.1:8000
 ```
 
@@ -161,9 +161,27 @@ Open http://localhost:5173 and ask a question.
 
 ---
 
+## Test scenarios in the data
+
+The synthetic datasets span **seven zones** across four quarters of 2025. Five zones
+(North, East, West, Central, plus the headline **South**) are stable baselines apart
+from South's Q3 crisis. Two additional zones exist specifically to exercise the
+pipeline across **different positive and negative outcomes** with *distinct* root
+causes, so you can confirm the agents discriminate rather than pattern-match:
+
+| Zone        | Outcome              | What's in the data                                                                                   | Triggering events                                              |
+|-------------|----------------------|------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
+| **South**   | 🔴 Negative — staffing | Q3 collapse: 3 senior underwriters resign → training 89%→31%, processing 3→9 days, approvals −18%      | `EVT-2025-0814-STH`, `EVT-2025-0820-STH`                        |
+| **Southeast** | 🔴 Negative — fraud/compliance | Q4 collapse: fraud ring in Business Loans → fraud cases 6→22, compliance flags 5→19, audit 87→64, NPA 3.05%→5.2% | `EVT-2025-1105-STE`, `EVT-2025-1118-STE`                        |
+| **Northwest** | 🟢 Positive — turnaround | Weak Q1 → strong Q4: approvals 67.5%→76.2%, NPS 58→78, churn 11.5%→6.5%, training 72%→95.5%             | `EVT-2025-0410-NWS` (digital platform), `EVT-2025-0815-NWS` (upskilling) |
+
+South and Southeast share similar surface symptoms (declining approvals, falling NPS)
+but **different root causes** — staffing vs. fraud — which is the key discrimination
+test. Northwest exercises the positive/improvement path.
+
 ## Example queries
 
-The three scenarios below are full **investigations**. To see the other routing paths,
+The five scenarios below are full **investigations**. To see the other routing paths,
 try a factual lookup like *"What was the NPS in North in Q2 2025?"* (Quick Answer), a
 concept question like *"What is NPA?"* (BankIQ Assistant), or a write attempt like
 *"Delete all loan records for the North zone."* (refused by the read-only guardrail).
@@ -193,6 +211,26 @@ Quantify the revenue and NPA exposure from the South zone Personal Loan slowdown
 **Expected:** 30/60/90-day projections in ₹ Cr, leading with ~₹4.2 Cr lost
 Personal-Loan disbursement and ~₹1.8 Cr NPA provisioning, plus recommended actions
 with named owners.
+
+### 4. A different crisis — fraud, not staffing (root-cause discrimination)
+```
+Why did the Southeast zone deteriorate in Q4, and what is the root cause?
+```
+**Expected:** Root cause = the **Nov 2025 Business-Loan fraud ring**
+(`EVT-2025-1105-STE`) and the follow-on regulatory review — *not* staffing. Causal
+chain through fraud cases 6 → 22 → compliance flags 5 → 19 / audit score 87 → 64 →
+Business-Loan default 4.1% → 8.2% → tightened approvals and NPS 70 → 55. This should
+read clearly differently from the South staffing collapse despite similar symptoms.
+
+### 5. A positive outcome — what went right (improvement path)
+```
+What drove the turnaround and improvement in the Northwest zone during 2025?
+```
+**Expected:** Improvement traced to the **Apr digital lending platform**
+(`EVT-2025-0410-NWS`) and **Aug underwriter upskilling** (`EVT-2025-0815-NWS`):
+training completion 72% → 95.5%, processing 4.2 → 2.4 days, approvals 67.5% → 76.2%,
+NPS 58 → 78, churn 11.5% → 6.5%, NPA 3.8% → 2.5%. Confirms the pipeline narrates a
+positive trajectory, not just failures.
 
 ---
 
@@ -245,13 +283,10 @@ headline are designed to be consistently discoverable.)*
 ├── backend/
 │   ├── app/            FastAPI app, agents (triage + 5 investigation + 2 lightweight),
 │   │                   pipeline, services, models, prompts
-│   ├── scripts/        generate_synthetic_data.py
-│   └── data/           generated CSVs (gitignored)
+│   └── data/           the seven synthetic CSV datasets (committed with the repo)
 └── frontend/
     └── src/            React UI (components, hooks, api, types, styles)
 ```
-
-See [backend/README.md](backend/README.md) for backend-specific details.
 
 ---
 
