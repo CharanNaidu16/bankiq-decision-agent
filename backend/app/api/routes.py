@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from sse_starlette.sse import EventSourceResponse
 
 from app.config import get_settings
@@ -26,10 +26,12 @@ from app.constants import (
     SSE_EVENT_REPORT,
 )
 from app.core.logging import get_logger
+from app.models.email import SendReportRequest
 from app.models.events import AgentProgressEvent
 from app.models.investigation import FinalReport, InvestigationRequest
 from app.pipeline.investigation_pipeline import InvestigationPipeline
 from app.services.dataset_repository import DatasetRepository
+from app.services.email_service import EmailError, EmailService
 from app.services.llm_client import GroqLlmClient
 
 _logger = get_logger("api")
@@ -40,6 +42,7 @@ router = APIRouter(prefix="/api", tags=["investigation"])
 # caches dataset frames in memory; the LLM client holds a pooled HTTP client.
 _dataset_repository = DatasetRepository()
 _llm_client = GroqLlmClient()
+_email_service = EmailService()
 
 
 @router.get("/health")
@@ -56,6 +59,51 @@ async def health() -> dict[str, object]:
         "model": settings.groq_model,
         "llm_configured": settings.is_llm_configured,
         "datasets_loaded": _dataset_repository.all_datasets_present(),
+    }
+
+
+@router.post("/send-report")
+async def send_report(send_request: SendReportRequest) -> dict[str, object]:
+    """Email a generated report to a recipient via the configured SMTP server.
+
+    The server holds the sending credential, so the caller only supplies the
+    recipient address and the report body — no per-user authentication.
+
+    Args:
+        send_request: The validated recipient, subject, and report body.
+
+    Returns:
+        A small confirmation payload.
+
+    Raises:
+        HTTPException: 503 if email is not configured on the server, or 502 if
+            the message could not be delivered.
+    """
+    if not _email_service.is_configured:
+        raise HTTPException(
+            status_code=503,
+            detail="Email sending is not configured on the server.",
+        )
+    _logger.info(
+        "Report email requested for %d recipient(s), %d cc",
+        len(send_request.recipients),
+        len(send_request.cc),
+    )
+    try:
+        await _email_service.send_report(
+            recipients=send_request.recipients,
+            cc=send_request.cc,
+            subject=send_request.subject,
+            body=send_request.body,
+        )
+    except EmailError as error:
+        raise HTTPException(
+            status_code=502, detail=f"Could not send the email: {error}"
+        ) from error
+    return {
+        "status": "sent",
+        "recipients": send_request.recipients,
+        "cc": send_request.cc,
     }
 
 

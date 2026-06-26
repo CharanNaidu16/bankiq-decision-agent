@@ -154,6 +154,15 @@ FORECAST_HORIZON_DAYS: Final[tuple[int, ...]] = (30, 60, 90)
 # One bounded retry when the model returns text that does not parse as the
 # expected JSON schema.
 LLM_JSON_PARSE_MAX_RETRIES: Final[int] = 1
+# Retries when the provider returns a 429 rate-limit error. We wait out the
+# provider's advised delay and retry, but only when that delay is short — a
+# per-minute (TPM) limit clears in seconds, whereas a daily (TPD) limit advises
+# minutes, in which case we fail fast and let the stage degrade rather than hang.
+LLM_RATE_LIMIT_MAX_RETRIES: Final[int] = 4
+# A per-minute (TPM) limit needs up to a full ~60s window to clear, so the cap
+# must exceed that; a daily (TPD) limit advises minutes (>= ~2m), which stays
+# above this cap and therefore still fails fast.
+LLM_RATE_LIMIT_MAX_WAIT_SECONDS: Final[float] = 65.0
 # Cap on the response token budget for a single agent call. Kept modest because
 # the reserved output budget counts against the provider's tokens-per-minute
 # limit (Groq free tier allows ~12k TPM); a large reservation plus the prompt can

@@ -42,12 +42,28 @@ converted to ₹ Cr. Use this as the 30-day figure.
 or gained from churn improvement and NPS uplift.
 - All figures are still positive numbers — the scenario_type field signals the direction.
 
+GROUNDING (mandatory — do not invent figures):
+- Every monetary figure MUST be derived from the actual disbursement_amt and provisioning_amt \
+numbers in the provided data. Compute deltas from those exact values; never estimate, round up, \
+or carry a figure over from a different zone or example.
+- npa_exposure_cr (the NPA rise for risk, or NPA reduction for opportunity) MUST equal the \
+provisioning_amt delta between the two quarters in scope, in ₹ Cr. If provisioning barely moved, \
+this figure is small — often well under ₹1 Cr — so report that small number; do NOT inflate it.
+- If the data does not support a figure, use the closest grounded delta or 0. A defensible small \
+number is better than an impressive invented one.
+
+ARITHMETIC (enforced):
+- For EVERY horizon, total_exposure_cr MUST equal revenue_at_risk_cr + npa_exposure_cr exactly.
+- ALL monetary fields are POSITIVE magnitudes. Never output a negative number; the scenario_type \
+field — not a minus sign — tells the reader whether the figure is good (opportunity) or bad (risk).
+- headline_total_exposure_cr MUST equal the 30-day total_exposure_cr.
+
 SANITY CHECK: For a single zone and one primary affected product, the 30-day total is \
-typically a single-digit ₹ Cr figure. Keep figures grounded in actual disbursement and \
-provisioning deltas from the data.
+typically a single-digit ₹ Cr figure, and it must reconcile with the disbursement and \
+provisioning deltas actually present in the data.
 
 product_impacts: break down disbursement delta by product. Focus on the most-affected products.
-headline_total_exposure_cr: the single number to lead with — typically the 30-day total.
+headline_total_exposure_cr: the single number to lead with — the 30-day total.
 State assumptions briefly for each horizon.
 
 OUTPUT CONTRACT:

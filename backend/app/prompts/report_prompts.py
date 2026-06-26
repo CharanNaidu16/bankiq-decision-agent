@@ -33,6 +33,10 @@ and a priority. Focus on fixing the root cause and limiting further damage.
 FOR OPPORTUNITY REPORTS (scenario_type = "opportunity"):
 - financial_impact: frame figures as "value captured", "revenue opportunity realized", \
 "NPA reduction achieved". Reframe what_is_at_risk as what_has_been_gained.
+- NEVER use the words "exposure", "at risk", "loss", "damage", or "crisis" in an opportunity \
+report — those are risk-only terms. The headline figure is value CAPTURED, not exposure.
+- Use the financial figures exactly as given in the impact result; do not re-derive or inflate \
+them, and make sure the headline equals the 30-day total you were given.
 - recommended_actions: 3-5 concrete sustain-and-replicate actions. Each must have a named \
 role owner, a 30/60/90-day timeline, an expected_outcome, and a priority. Focus on: \
 (1) sustaining what is working in this zone, (2) identifying which practices drove the \

@@ -3,6 +3,7 @@
 import type { FinalReport, ReportSection as ReportSectionModel } from "../types/investigation";
 import { ConfidenceBar } from "./ConfidenceBar";
 import { CopyButton } from "./CopyButton";
+import { EmailReportButton } from "./EmailReportButton";
 import { RecommendedActionsTable } from "./RecommendedActionsTable";
 import { ReportSection } from "./ReportSection";
 import { buildReportPlainText } from "../utils/buildReportPlainText";
@@ -61,7 +62,13 @@ export function ExecutiveReportView({ finalReport }: ExecutiveReportViewProps): 
             {report.confidence_statement && ` · ${report.confidence_statement}`}
           </p>
         </div>
-        <CopyButton getText={() => buildReportPlainText(finalReport)} />
+        <div className={styles.actions}>
+          <CopyButton getText={() => buildReportPlainText(finalReport)} />
+          <EmailReportButton
+            getText={() => buildReportPlainText(finalReport)}
+            subject={report.title}
+          />
+        </div>
       </header>
 
       <div className={styles.summaryCallout}>

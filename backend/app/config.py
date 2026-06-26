@@ -58,6 +58,17 @@ class Settings(BaseSettings):
         default=60.0, alias="LLM_REQUEST_TIMEOUT_SECONDS", gt=0.0
     )
 
+    # Outbound email (used by the "Email report" action). For Gmail, smtp_username
+    # is the Gmail address and smtp_password is a 16-character App Password.
+    smtp_host: str = Field(default="smtp.gmail.com", alias="SMTP_HOST")
+    smtp_port: int = Field(default=587, alias="SMTP_PORT", gt=0, lt=65536)
+    smtp_username: str = Field(default="", alias="SMTP_USERNAME")
+    smtp_password: str = Field(default="", alias="SMTP_PASSWORD")
+    smtp_from_name: str = Field(default="BankIQ", alias="SMTP_FROM_NAME")
+    smtp_timeout_seconds: float = Field(
+        default=30.0, alias="SMTP_TIMEOUT_SECONDS", gt=0.0
+    )
+
     host: str = Field(default="127.0.0.1", alias="BANKIQ_HOST")
     port: int = Field(default=8000, alias="BANKIQ_PORT", gt=0, lt=65536)
 
@@ -95,6 +106,16 @@ class Settings(BaseSettings):
             True when an API key has been provided, enabling live LLM calls.
         """
         return bool(self.groq_api_key.strip())
+
+    @property
+    def is_email_configured(self) -> bool:
+        """Whether outbound email (SMTP) credentials are present.
+
+        Returns:
+            True when both an SMTP username and password are configured,
+            enabling the "Email report" action.
+        """
+        return bool(self.smtp_username.strip() and self.smtp_password.strip())
 
 
 @lru_cache(maxsize=1)

@@ -27,6 +27,12 @@
   padding-bottom: 18px;
 }
 
+.actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
 .title {
   font-size: 23px;
   letter-spacing: -0.3px;

@@ -89,6 +89,9 @@ chain, not just a dashboard.
   receives a report, never a raw 500. If the triage call itself can't run (the LLM is
   rate-limited or misconfigured), BankIQ returns one honest "temporarily unavailable"
   report instead of fanning out to five more doomed LLM calls.
+- **Share-ready output.** A finished report can be copied to the clipboard or emailed
+  directly from the UI to one or more recipients (with Cc) via a configured SMTP
+  account — the "Email report" control is shown only when SMTP credentials are present.
 
 ---
 
@@ -117,6 +120,7 @@ refusal.
 |-----------|-----------------------------------------------------------------------|
 | Backend   | Python 3.11+, FastAPI, sse-starlette, Pydantic v2, pandas, Rich        |
 | LLM       | Groq Cloud via the OpenAI-compatible SDK (`llama-3.3-70b-versatile`)   |
+| Email     | Standard-library `smtplib` over STARTTLS (e.g. Gmail SMTP, optional)   |
 | Frontend  | React 18, Vite, TypeScript (native `fetch` + `ReadableStream` for SSE) |
 
 ---
@@ -145,6 +149,11 @@ needed — just run the API:
 ```bash
 uvicorn app.main:app --reload          # http://127.0.0.1:8000
 ```
+
+> **Optional — emailing reports.** To enable the "Email report" button, also set the
+> `SMTP_*` values in `.env` (for Gmail, use your address as `SMTP_USERNAME` and a
+> 16-character **App Password** as `SMTP_PASSWORD`). Leave them blank to run without
+> email — the rest of BankIQ is unaffected and the button simply stays hidden.
 
 ### 2. Frontend
 

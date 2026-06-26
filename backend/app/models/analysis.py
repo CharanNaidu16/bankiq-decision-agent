@@ -8,8 +8,9 @@ configured thresholds, and aligns event-log entries to metric movements.
 from __future__ import annotations
 
 import json
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class Anomaly(BaseModel):
@@ -29,17 +30,68 @@ class Anomaly(BaseModel):
         description: One-sentence plain-English description of the anomaly.
     """
 
-    dataset: str
-    metric: str
-    zone: str
-    quarter: str
+    dataset: str = "unknown"
+    metric: str = "unknown"
+    zone: str = "unknown"
+    quarter: str = "unknown"
     product: str | None = None
     baseline_value: float | None = None
     observed_value: float | None = None
     delta_pct: float | None = None
-    direction: str
-    severity: str
-    description: str
+    direction: str = "unknown"
+    severity: str = "medium"
+    description: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_missing_strings(cls, data: Any) -> Any:
+        """Tolerate the LLM emitting ``null`` for required string fields.
+
+        The model occasionally returns ``null`` for fields like ``direction`` or
+        ``severity`` — especially when an analysis flags many anomalies, as a
+        turnaround zone does. A single ``null`` would otherwise fail validation
+        of the entire :class:`AnalysisResult` and sink the whole stage. Here we
+        coerce those nulls to sensible defaults so one malformed field never
+        discards an otherwise-good analysis. ``direction`` is inferred from the
+        sign of ``delta_pct`` when the model leaves it out.
+
+        Args:
+            data: The raw payload (a dict during normal LLM parsing).
+
+        Returns:
+            The payload with null/blank required strings replaced by defaults.
+        """
+        if not isinstance(data, dict):
+            return data
+
+        identity_defaults = {
+            "dataset": "unknown",
+            "metric": "unknown",
+            "zone": "unknown",
+            "quarter": "unknown",
+            "severity": "medium",
+            "description": "",
+        }
+        for field_name, default_value in identity_defaults.items():
+            value = data.get(field_name)
+            if value is None or (isinstance(value, str) and not value.strip()):
+                data[field_name] = default_value
+
+        direction = data.get("direction")
+        if direction is None or (isinstance(direction, str) and not direction.strip()):
+            delta = data.get("delta_pct")
+            try:
+                delta_value = float(delta) if delta is not None else None
+            except (TypeError, ValueError):
+                delta_value = None
+            if delta_value is not None and delta_value > 0:
+                data["direction"] = "increase"
+            elif delta_value is not None and delta_value < 0:
+                data["direction"] = "decrease"
+            else:
+                data["direction"] = "unknown"
+
+        return data
 
 
 class DatasetFinding(BaseModel):

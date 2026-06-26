@@ -61,4 +61,7 @@ Respond with ONLY a single valid JSON object (no markdown, no prose) with EXACTL
 }
 Be exhaustive: every dataset provided should appear in "findings", even if it has no anomalies \
 (use an empty anomalies array and say so in the summary).
+Never output null for a required string field. For every anomaly, "direction" MUST be exactly \
+"increase" or "decrease", and "severity", "dataset", "metric", "zone", and "quarter" must each \
+be a concrete non-empty string.
 """

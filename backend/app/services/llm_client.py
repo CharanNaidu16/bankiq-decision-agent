@@ -12,14 +12,21 @@ retry on parse failure before surfacing an :class:`LlmError`.
 
 from __future__ import annotations
 
+import asyncio
 import json
+import re
 from typing import TypeVar
 
-from openai import APIError, AsyncOpenAI
+from openai import APIError, AsyncOpenAI, RateLimitError
 from pydantic import BaseModel, ValidationError
 
 from app.config import Settings, get_settings
-from app.constants import LLM_JSON_PARSE_MAX_RETRIES, LLM_MAX_OUTPUT_TOKENS
+from app.constants import (
+    LLM_JSON_PARSE_MAX_RETRIES,
+    LLM_MAX_OUTPUT_TOKENS,
+    LLM_RATE_LIMIT_MAX_RETRIES,
+    LLM_RATE_LIMIT_MAX_WAIT_SECONDS,
+)
 from app.core.exceptions import LlmError, LlmNotConfiguredError
 from app.core.logging import get_logger
 
@@ -49,6 +56,9 @@ class GroqLlmClient:
                 api_key=self._settings.groq_api_key,
                 base_url=self._settings.groq_base_url,
                 timeout=self._settings.llm_request_timeout_seconds,
+                # Disable the SDK's opaque auto-retries; rate limits are handled
+                # explicitly below with a capped, advised-delay backoff.
+                max_retries=0,
             )
 
     @property
@@ -98,7 +108,9 @@ class GroqLlmClient:
 
         last_error: Exception | None = None
         for attempt in range(LLM_JSON_PARSE_MAX_RETRIES + 1):
-            raw_content = await self._request_completion(messages, agent_name)
+            raw_content = await self._request_with_rate_limit_backoff(
+                messages, agent_name
+            )
             try:
                 return self._parse_response(raw_content, response_model)
             except (ValidationError, json.JSONDecodeError) as parse_error:
@@ -143,6 +155,9 @@ class GroqLlmClient:
                 max_tokens=LLM_MAX_OUTPUT_TOKENS,
                 response_format={"type": "json_object"},
             )
+        except RateLimitError:
+            # Let the backoff wrapper decide whether to wait and retry.
+            raise
         except APIError as api_error:
             raise LlmError(
                 f"Groq API call failed: {api_error}", agent_name=agent_name
@@ -152,6 +167,79 @@ class GroqLlmClient:
         if not content:
             raise LlmError("Groq API returned an empty response.", agent_name=agent_name)
         return content
+
+    async def _request_with_rate_limit_backoff(
+        self, messages: list[dict[str, str]], agent_name: str
+    ) -> str:
+        """Issue a completion, waiting out short rate-limit delays and retrying.
+
+        On a 429 the provider advises how long to wait. A per-minute (TPM) limit
+        clears in seconds, so we sleep that long and retry; a daily (TPD) limit
+        advises minutes, so we fail fast and let the stage degrade rather than
+        block the pipeline. Non-rate-limit errors are surfaced unchanged.
+
+        Args:
+            messages: The full message list to send.
+            agent_name: Calling agent's name for logging and error context.
+
+        Returns:
+            The raw text content of the model's reply.
+
+        Raises:
+            LlmError: If the call fails, or the advised wait is too long to retry.
+        """
+        for attempt in range(LLM_RATE_LIMIT_MAX_RETRIES + 1):
+            try:
+                return await self._request_completion(messages, agent_name)
+            except RateLimitError as rate_error:
+                wait_seconds = self._advised_retry_seconds(rate_error)
+                can_retry = (
+                    attempt < LLM_RATE_LIMIT_MAX_RETRIES
+                    and wait_seconds is not None
+                    and wait_seconds <= LLM_RATE_LIMIT_MAX_WAIT_SECONDS
+                )
+                if not can_retry:
+                    raise LlmError(
+                        f"Groq API call failed: {rate_error}", agent_name=agent_name
+                    ) from rate_error
+                _logger.warning(
+                    "[%s] rate-limited; waiting %.1fs then retrying (%d/%d)",
+                    agent_name,
+                    wait_seconds,
+                    attempt + 1,
+                    LLM_RATE_LIMIT_MAX_RETRIES,
+                )
+                await asyncio.sleep(wait_seconds + 0.5)
+        # Unreachable: the loop either returns or raises, but satisfies typing.
+        raise LlmError("Rate-limit retry loop exhausted.", agent_name=agent_name)
+
+    @staticmethod
+    def _advised_retry_seconds(error: RateLimitError) -> float | None:
+        """Extract the provider's advised retry delay, in seconds.
+
+        Prefers the ``Retry-After`` header, then falls back to parsing the error
+        message (Groq phrases it as e.g. "try again in 11.855s" or "in
+        3m52.416s").
+
+        Args:
+            error: The rate-limit error raised by the SDK.
+
+        Returns:
+            The advised wait in seconds, or ``None`` if it cannot be determined.
+        """
+        response = getattr(error, "response", None)
+        if response is not None:
+            header_value = response.headers.get("retry-after")
+            if header_value:
+                try:
+                    return float(header_value)
+                except ValueError:
+                    pass
+        match = re.search(r"try again in (?:(\d+)m)?([\d.]+)s", str(error))
+        if match:
+            minutes = int(match.group(1)) if match.group(1) else 0
+            return minutes * 60 + float(match.group(2))
+        return None
 
     @staticmethod
     def _parse_response(raw_content: str, response_model: type[TModel]) -> TModel:

@@ -7,7 +7,7 @@ consumption.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class ProductImpact(BaseModel):
@@ -49,6 +49,25 @@ class ImpactProjection(BaseModel):
     total_exposure_cr: float = 0.0
     assumptions: str = ""
 
+    @model_validator(mode="after")
+    def _enforce_positive_and_reconcile(self) -> "ImpactProjection":
+        """Guarantee positive magnitudes and that the total reconciles.
+
+        The LLM occasionally emits a negative figure (e.g. an NPA *reduction* as
+        ``-5``) or a total that does not equal its parts (``14 + -5 = 19``). Sign
+        is carried by :attr:`ImpactResult.scenario_type`, not by the numbers, so
+        we force every component to a positive magnitude and recompute the total
+        as ``revenue + npa`` — making the projection internally consistent no
+        matter what the model returned.
+
+        Returns:
+            The reconciled projection.
+        """
+        self.revenue_at_risk_cr = round(abs(self.revenue_at_risk_cr), 2)
+        self.npa_exposure_cr = round(abs(self.npa_exposure_cr), 2)
+        self.total_exposure_cr = round(self.revenue_at_risk_cr + self.npa_exposure_cr, 2)
+        return self
+
 
 class ImpactResult(BaseModel):
     """Aggregate output of the impact-forecast stage.
@@ -74,3 +93,30 @@ class ImpactResult(BaseModel):
     headline_total_exposure_cr: float = 0.0
     summary: str = ""
     degraded: bool = False
+
+    @model_validator(mode="after")
+    def _sync_headline_to_thirty_day(self) -> "ImpactResult":
+        """Keep the headline figure consistent with the 30-day projection.
+
+        The headline is meant to be the 30-day total; the LLM sometimes reports a
+        different number. When a 30-day projection exists, we adopt its
+        (already-reconciled) total as the headline so the report's lead figure
+        always matches the table. CLV is forced positive for the same
+        sign-convention reason as the projection fields.
+
+        Returns:
+            The result with a consistent headline figure.
+        """
+        self.customer_lifetime_value_lost_cr = round(
+            abs(self.customer_lifetime_value_lost_cr), 2
+        )
+        thirty_day = next(
+            (p for p in self.projections if p.horizon_days == 30), None
+        )
+        if thirty_day is not None:
+            self.headline_total_exposure_cr = thirty_day.total_exposure_cr
+        else:
+            self.headline_total_exposure_cr = round(
+                abs(self.headline_total_exposure_cr), 2
+            )
+        return self
