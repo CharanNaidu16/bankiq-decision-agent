@@ -57,6 +57,7 @@ class BaseAgent:
         system_prompt: str,
         user_prompt: str,
         response_model: type[TModel],
+        max_output_tokens: int | None = None,
     ) -> TModel:
         """Call the LLM and return a validated structured result.
 
@@ -64,6 +65,10 @@ class BaseAgent:
             system_prompt: System message defining role and output contract.
             user_prompt: User message carrying the task and serialized data.
             response_model: The Pydantic model the response must validate as.
+            max_output_tokens: Optional output token budget for this call. Small
+                JSON stages pass a tight value so their reserved budget does not
+                consume the provider's per-minute token limit. Defaults to the
+                client's standard budget.
 
         Returns:
             A validated instance of ``response_model``.
@@ -78,4 +83,5 @@ class BaseAgent:
             user_prompt=user_prompt,
             response_model=response_model,
             agent_name=self.agent_name,
+            max_output_tokens=max_output_tokens,
         )

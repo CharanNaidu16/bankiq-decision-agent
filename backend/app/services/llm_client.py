@@ -17,7 +17,7 @@ import json
 import re
 from typing import TypeVar
 
-from openai import APIError, AsyncOpenAI, RateLimitError
+from openai import APIError, APIStatusError, AsyncOpenAI, RateLimitError
 from pydantic import BaseModel, ValidationError
 
 from app.config import Settings, get_settings
@@ -26,6 +26,8 @@ from app.constants import (
     LLM_MAX_OUTPUT_TOKENS,
     LLM_RATE_LIMIT_MAX_RETRIES,
     LLM_RATE_LIMIT_MAX_WAIT_SECONDS,
+    LLM_SERVER_ERROR_BASE_DELAY_SECONDS,
+    LLM_SERVER_ERROR_MAX_RETRIES,
 )
 from app.core.exceptions import LlmError, LlmNotConfiguredError
 from app.core.logging import get_logger
@@ -77,6 +79,7 @@ class GroqLlmClient:
         user_prompt: str,
         response_model: type[TModel],
         agent_name: str,
+        max_output_tokens: int | None = None,
     ) -> TModel:
         """Call the LLM and parse its JSON response into a Pydantic model.
 
@@ -86,6 +89,10 @@ class GroqLlmClient:
             user_prompt: The user message carrying the task and serialized data.
             response_model: The Pydantic model the response must validate as.
             agent_name: Calling agent's name, used for logging and error context.
+            max_output_tokens: Output token budget for this call. Defaults to
+                ``LLM_MAX_OUTPUT_TOKENS``; lightweight stages pass a smaller value
+                so their reserved budget does not consume the per-minute token
+                limit (the reservation counts against TPM even if unused).
 
         Returns:
             An instance of ``response_model`` parsed from the model's reply.
@@ -101,6 +108,7 @@ class GroqLlmClient:
                 agent_name=agent_name,
             )
 
+        token_budget = max_output_tokens or LLM_MAX_OUTPUT_TOKENS
         messages: list[dict[str, str]] = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -109,7 +117,7 @@ class GroqLlmClient:
         last_error: Exception | None = None
         for attempt in range(LLM_JSON_PARSE_MAX_RETRIES + 1):
             raw_content = await self._request_with_rate_limit_backoff(
-                messages, agent_name
+                messages, agent_name, token_budget
             )
             try:
                 return self._parse_response(raw_content, response_model)
@@ -132,13 +140,14 @@ class GroqLlmClient:
         )
 
     async def _request_completion(
-        self, messages: list[dict[str, str]], agent_name: str
+        self, messages: list[dict[str, str]], agent_name: str, max_tokens: int
     ) -> str:
         """Issue a single JSON-mode chat completion request.
 
         Args:
             messages: The full message list to send.
             agent_name: Calling agent's name for error context.
+            max_tokens: Output token budget reserved for this request.
 
         Returns:
             The raw text content of the model's reply.
@@ -147,17 +156,33 @@ class GroqLlmClient:
             LlmError: If the underlying API call fails.
         """
         assert self._async_client is not None  # guarded by caller
+        # Gemini thinking models burn the output budget on internal reasoning and
+        # truncate the JSON unless reasoning is disabled; pass reasoning_effort
+        # only when configured so non-reasoning models (Groq llama) are unaffected.
+        extra_kwargs: dict[str, object] = {}
+        if self._settings.llm_reasoning_effort:
+            extra_kwargs["reasoning_effort"] = self._settings.llm_reasoning_effort
         try:
             response = await self._async_client.chat.completions.create(
                 model=self._settings.groq_model,
                 messages=messages,  # type: ignore[arg-type]
                 temperature=self._settings.llm_temperature,
-                max_tokens=LLM_MAX_OUTPUT_TOKENS,
+                max_tokens=max_tokens,
                 response_format={"type": "json_object"},
+                **extra_kwargs,  # type: ignore[arg-type]
             )
         except RateLimitError:
             # Let the backoff wrapper decide whether to wait and retry.
             raise
+        except APIStatusError as status_error:
+            # Transient server errors (5xx, e.g. Gemini's 503 "overloaded") are
+            # retryable; let the backoff wrapper handle them. Other status errors
+            # (4xx) are not, so surface them immediately.
+            if status_error.status_code >= 500:
+                raise
+            raise LlmError(
+                f"Groq API call failed: {status_error}", agent_name=agent_name
+            ) from status_error
         except APIError as api_error:
             raise LlmError(
                 f"Groq API call failed: {api_error}", agent_name=agent_name
@@ -169,7 +194,7 @@ class GroqLlmClient:
         return content
 
     async def _request_with_rate_limit_backoff(
-        self, messages: list[dict[str, str]], agent_name: str
+        self, messages: list[dict[str, str]], agent_name: str, max_tokens: int
     ) -> str:
         """Issue a completion, waiting out short rate-limit delays and retrying.
 
@@ -181,6 +206,7 @@ class GroqLlmClient:
         Args:
             messages: The full message list to send.
             agent_name: Calling agent's name for logging and error context.
+            max_tokens: Output token budget reserved for this request.
 
         Returns:
             The raw text content of the model's reply.
@@ -188,9 +214,10 @@ class GroqLlmClient:
         Raises:
             LlmError: If the call fails, or the advised wait is too long to retry.
         """
+        server_error_attempts = 0
         for attempt in range(LLM_RATE_LIMIT_MAX_RETRIES + 1):
             try:
-                return await self._request_completion(messages, agent_name)
+                return await self._request_completion(messages, agent_name, max_tokens)
             except RateLimitError as rate_error:
                 wait_seconds = self._advised_retry_seconds(rate_error)
                 can_retry = (
@@ -210,6 +237,26 @@ class GroqLlmClient:
                     LLM_RATE_LIMIT_MAX_RETRIES,
                 )
                 await asyncio.sleep(wait_seconds + 0.5)
+            except APIStatusError as server_error:
+                # Transient 5xx (e.g. Gemini free-tier 503 "overloaded"): retry a
+                # few times with a short exponential backoff. These don't count
+                # against the rate-limit loop, so a busy provider doesn't degrade
+                # the stage on the first blip.
+                if server_error_attempts >= LLM_SERVER_ERROR_MAX_RETRIES:
+                    raise LlmError(
+                        f"Groq API call failed: {server_error}", agent_name=agent_name
+                    ) from server_error
+                delay = LLM_SERVER_ERROR_BASE_DELAY_SECONDS * (2**server_error_attempts)
+                server_error_attempts += 1
+                _logger.warning(
+                    "[%s] server error %s; waiting %.1fs then retrying (%d/%d)",
+                    agent_name,
+                    server_error.status_code,
+                    delay,
+                    server_error_attempts,
+                    LLM_SERVER_ERROR_MAX_RETRIES,
+                )
+                await asyncio.sleep(delay)
         # Unreachable: the loop either returns or raises, but satisfies typing.
         raise LlmError("Rate-limit retry loop exhausted.", agent_name=agent_name)
 

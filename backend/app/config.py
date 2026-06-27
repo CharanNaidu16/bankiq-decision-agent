@@ -57,6 +57,11 @@ class Settings(BaseSettings):
     llm_request_timeout_seconds: float = Field(
         default=60.0, alias="LLM_REQUEST_TIMEOUT_SECONDS", gt=0.0
     )
+    # Reasoning/"thinking" effort, sent only when non-empty. Needed for Gemini
+    # thinking models (e.g. gemini-2.5-flash), which otherwise spend the output
+    # token budget on internal reasoning and truncate the JSON answer. Set to
+    # "none" for those models; leave blank for Groq's non-reasoning llama models.
+    llm_reasoning_effort: str = Field(default="", alias="LLM_REASONING_EFFORT")
 
     # Outbound email (used by the "Email report" action). For Gmail, smtp_username
     # is the Gmail address and smtp_password is a 16-character App Password.

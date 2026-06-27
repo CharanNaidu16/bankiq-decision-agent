@@ -59,12 +59,12 @@ class ImpactForecastAgent(BaseAgent):
             for quarter in (parsed_intent.comparison_quarter, parsed_intent.focus_quarter)
             if quarter
         ] or None
-        financial_markdown = self.dataset_repository.serialize_datasets_for_analysis(
+        financial_csv = self.dataset_repository.serialize_datasets_for_analysis(
             list(_FINANCIAL_DATASETS), zones=focus_zones, quarters=scoped_quarters
         )
         root_cause_json = root_cause_result.model_dump_json(indent=2)
         user_prompt = self._build_user_prompt(
-            parsed_intent, root_cause_json, financial_markdown
+            parsed_intent, root_cause_json, financial_csv
         )
         impact_result = await self._invoke_llm(
             system_prompt=IMPACT_SYSTEM_PROMPT,
@@ -83,14 +83,14 @@ class ImpactForecastAgent(BaseAgent):
     def _build_user_prompt(
         parsed_intent: ParsedIntent,
         root_cause_json: str,
-        financial_markdown: str,
+        financial_csv: str,
     ) -> str:
         """Assemble the impact-forecast user prompt.
 
         Args:
             parsed_intent: The investigation scope.
             root_cause_json: The root-cause result serialized as JSON.
-            financial_markdown: Financial datasets as markdown tables.
+            financial_csv: Financial datasets as CSV blocks.
 
         Returns:
             The composed user prompt string.
@@ -103,6 +103,6 @@ class ImpactForecastAgent(BaseAgent):
             f"- Comparison quarter: {parsed_intent.comparison_quarter or 'prior quarter'}\n\n"
             "ROOT CAUSE (JSON)\n"
             f"{root_cause_json}\n\n"
-            "FINANCIAL DATASETS (markdown)\n"
-            f"{financial_markdown}\n"
+            "FINANCIAL DATASETS (CSV)\n"
+            f"{financial_csv}\n"
         )

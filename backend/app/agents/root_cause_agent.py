@@ -46,12 +46,12 @@ class RootCauseAgent(BaseAgent):
             The :class:`RootCauseResult` with trigger, chain, and confidence.
         """
         focus_zones = [parsed_intent.focus_zone] if parsed_intent.focus_zone else None
-        event_log_markdown = self.dataset_repository.serialize_dataset_slice_to_markdown(
+        event_log_csv = self.dataset_repository.serialize_dataset_slice_to_csv(
             DATASET_EVENT_LOG, zones=focus_zones
         )
         anomalies_json = analysis_result.to_prompt_json()
         user_prompt = self._build_user_prompt(
-            parsed_intent, anomalies_json, event_log_markdown
+            parsed_intent, anomalies_json, event_log_csv
         )
         root_cause_result = await self._invoke_llm(
             system_prompt=ROOT_CAUSE_SYSTEM_PROMPT,
@@ -72,14 +72,14 @@ class RootCauseAgent(BaseAgent):
     def _build_user_prompt(
         parsed_intent: ParsedIntent,
         anomalies_json: str,
-        event_log_markdown: str,
+        event_log_csv: str,
     ) -> str:
         """Assemble the root-cause user prompt.
 
         Args:
             parsed_intent: The investigation scope.
             anomalies_json: The analyst's result serialized as JSON.
-            event_log_markdown: The focus-zone event log as a markdown table.
+            event_log_csv: The focus-zone event log as a CSV block.
 
         Returns:
             The composed user prompt string.
@@ -91,6 +91,6 @@ class RootCauseAgent(BaseAgent):
             f"- Focus quarter: {parsed_intent.focus_quarter or 'unspecified'}\n\n"
             "FLAGGED ANALYSIS (JSON)\n"
             f"{anomalies_json}\n\n"
-            "EVENT LOG FOR THE FOCUS ZONE (markdown)\n"
-            f"{event_log_markdown}\n"
+            "EVENT LOG FOR THE FOCUS ZONE (CSV)\n"
+            f"{event_log_csv}\n"
         )

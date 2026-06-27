@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from app.agents.base_agent import BaseAgent
-from app.constants import AGENT_NAME_GENERAL_ASSISTANT
+from app.constants import AGENT_NAME_GENERAL_ASSISTANT, LLM_DIRECT_ANSWER_MAX_OUTPUT_TOKENS
 from app.models.triage import DirectAnswer
 from app.prompts.triage_prompts import GENERAL_ASSISTANT_SYSTEM_PROMPT
 
@@ -28,6 +28,7 @@ class GeneralAssistantAgent(BaseAgent):
             system_prompt=GENERAL_ASSISTANT_SYSTEM_PROMPT,
             user_prompt=user_prompt,
             response_model=DirectAnswer,
+            max_output_tokens=LLM_DIRECT_ANSWER_MAX_OUTPUT_TOKENS,
         )
         self._logger.info("[%s] answered: %r", self.agent_name, answer.headline)
         return answer

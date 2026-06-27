@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from app.agents.base_agent import BaseAgent
-from app.constants import AGENT_NAME_SIMPLE_QUERY
+from app.constants import AGENT_NAME_SIMPLE_QUERY, LLM_DIRECT_ANSWER_MAX_OUTPUT_TOKENS
 from app.models.intent import ParsedIntent
 from app.models.triage import DirectAnswer
 from app.prompts.triage_prompts import SIMPLE_QUERY_SYSTEM_PROMPT
@@ -32,7 +32,7 @@ class SimpleQueryAgent(BaseAgent):
         """Answer a factual question from the scoped datasets.
 
         The scope from the intent agent narrows the data slice; the LLM then
-        reads the markdown tables and computes the answer directly, with no
+        reads the CSV tables and computes the answer directly, with no
         root-cause, impact, or report stages.
 
         Args:
@@ -57,13 +57,14 @@ class SimpleQueryAgent(BaseAgent):
             f"- Focus zone: {parsed_intent.focus_zone or 'all zones'}\n"
             f"- Focus quarter: {parsed_intent.focus_quarter or 'unspecified'}\n"
             f"- Focus product: {parsed_intent.focus_product or 'all products'}\n\n"
-            "DATASETS (markdown tables)\n"
+            "DATASETS (CSV; one block per dataset)\n"
             f"{serialized_data}\n"
         )
         answer = await self._invoke_llm(
             system_prompt=SIMPLE_QUERY_SYSTEM_PROMPT,
             user_prompt=user_prompt,
             response_model=DirectAnswer,
+            max_output_tokens=LLM_DIRECT_ANSWER_MAX_OUTPUT_TOKENS,
         )
         self._logger.info("[%s] answered: %r", self.agent_name, answer.headline)
         return answer

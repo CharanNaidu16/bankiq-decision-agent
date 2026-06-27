@@ -163,6 +163,11 @@ LLM_RATE_LIMIT_MAX_RETRIES: Final[int] = 4
 # must exceed that; a daily (TPD) limit advises minutes (>= ~2m), which stays
 # above this cap and therefore still fails fast.
 LLM_RATE_LIMIT_MAX_WAIT_SECONDS: Final[float] = 65.0
+# Retries when the provider returns a transient 5xx (e.g. Gemini's free tier
+# 503 "model overloaded"). Unlike a rate limit these clear in a second or two,
+# so we retry a few times with a short exponential backoff before degrading.
+LLM_SERVER_ERROR_MAX_RETRIES: Final[int] = 3
+LLM_SERVER_ERROR_BASE_DELAY_SECONDS: Final[float] = 1.5
 # Cap on the response token budget for a single agent call. Kept modest because
 # the reserved output budget counts against the provider's tokens-per-minute
 # limit (Groq free tier allows ~12k TPM); a large reservation plus the prompt can
@@ -170,6 +175,15 @@ LLM_RATE_LIMIT_MAX_WAIT_SECONDS: Final[float] = 65.0
 # analysis summary (see AnalysisResult.to_prompt_json) rather than every anomaly,
 # so this budget is comfortably sufficient for every stage's output.
 LLM_MAX_OUTPUT_TOKENS: Final[int] = 4096
+# Per-call output budgets for the lightweight paths. The reserved output budget
+# counts against the provider's tokens-per-minute limit, and triage + intent +
+# (quick answer) all fire within one minute; reserving the full 4096 for each
+# stacks past the free-tier 12k TPM ceiling, triggering a 429 and a ~30s backoff
+# that shows up as a long pause. These stages emit small JSON, so a tight budget
+# keeps the per-minute total under the limit without truncating their output.
+LLM_TRIAGE_MAX_OUTPUT_TOKENS: Final[int] = 512
+LLM_INTENT_MAX_OUTPUT_TOKENS: Final[int] = 1024
+LLM_DIRECT_ANSWER_MAX_OUTPUT_TOKENS: Final[int] = 1536
 
 # ---------------------------------------------------------------------------
 # SSE event type names emitted on the wire.

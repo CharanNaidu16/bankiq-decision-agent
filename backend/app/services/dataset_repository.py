@@ -141,7 +141,7 @@ class DatasetRepository:
 
     # -- serialization ------------------------------------------------------
 
-    def serialize_dataset_slice_to_markdown(
+    def serialize_dataset_slice_to_csv(
         self,
         dataset_name: str,
         *,
@@ -150,7 +150,12 @@ class DatasetRepository:
         product: str | None = None,
         max_rows: int = 200,
     ) -> str:
-        """Serialize a filtered dataset slice to a compact markdown table.
+        """Serialize a filtered dataset slice to a compact CSV block.
+
+        CSV is used (rather than markdown tables) because it carries the same
+        information in roughly 40% of the tokens — no alignment padding, pipe
+        borders, or separator row — which keeps even an all-zones, multi-dataset
+        context comfortably under the model's per-request token limit.
 
         Args:
             dataset_name: The dataset identifier to serialize.
@@ -160,8 +165,8 @@ class DatasetRepository:
             max_rows: Safety cap on rows included in the serialized table.
 
         Returns:
-            A markdown table string (with a heading), or a "no rows" note when
-            the slice is empty.
+            A CSV string (with a heading), or a "no rows" note when the slice
+            is empty.
         """
         sliced = self.filter_dataset_slice(
             dataset_name, zones=zones, quarters=quarters, product=product
@@ -171,7 +176,7 @@ class DatasetRepository:
             return f"{heading}\n(No matching rows.)"
 
         truncated = sliced.head(max_rows)
-        table = truncated.to_markdown(index=False)
+        table = truncated.to_csv(index=False).strip()
         suffix = (
             f"\n(Showing {max_rows} of {len(sliced)} rows.)"
             if len(sliced) > max_rows
@@ -186,7 +191,7 @@ class DatasetRepository:
         zones: list[str] | None = None,
         quarters: list[str] | None = None,
     ) -> str:
-        """Serialize several datasets into a single markdown context block.
+        """Serialize several datasets into a single CSV context block.
 
         The event log is intentionally never quarter-filtered (its rows are
         dated, not quartered) so the analyst always sees the full event history
@@ -198,14 +203,14 @@ class DatasetRepository:
             quarters: Quarters to keep (ignored for the event log).
 
         Returns:
-            A newline-separated markdown document covering all requested
+            A newline-separated document of CSV blocks covering all requested
             datasets.
         """
         blocks: list[str] = []
         for dataset_name in dataset_names:
             applied_quarters = None if dataset_name == DATASET_EVENT_LOG else quarters
             blocks.append(
-                self.serialize_dataset_slice_to_markdown(
+                self.serialize_dataset_slice_to_csv(
                     dataset_name, zones=zones, quarters=applied_quarters
                 )
             )

@@ -100,6 +100,6 @@ class DataAnalystAgent(BaseAgent):
             f"- Comparison quarter: {parsed_intent.comparison_quarter or 'prior quarter'}\n"
             f"- Focus product: {parsed_intent.focus_product or 'all products'}\n"
             f"- Normalized question: {parsed_intent.normalized_question}\n\n"
-            "DATASETS (markdown tables)\n"
+            "DATASETS (CSV; one block per dataset)\n"
             f"{serialized_data}\n"
         )

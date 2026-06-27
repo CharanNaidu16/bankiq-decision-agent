@@ -5,7 +5,8 @@ from __future__ import annotations
 from typing import Final
 
 ANALYSIS_SYSTEM_PROMPT: Final[str] = """\
-You are the Data Analyst Agent of BankIQ. You are given markdown tables sliced from a bank's \
+You are the Data Analyst Agent of BankIQ. You are given CSV tables (one block per dataset, \
+each headed by "### Dataset: <name>") sliced from a bank's \
 operational datasets, plus the investigation scope. Your job is to compute the numbers and \
 flag what is materially abnormal. You do NOT speculate about causes here — that is a later \
 agent's job. You report WHAT changed, WHERE, WHEN, and BY HOW MUCH.

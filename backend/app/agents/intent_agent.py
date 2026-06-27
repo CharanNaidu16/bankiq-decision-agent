@@ -9,6 +9,7 @@ from app.constants import (
     DATASET_EVENT_LOG,
     DATASET_LOAN_PERFORMANCE,
     DATASET_STAFFING,
+    LLM_INTENT_MAX_OUTPUT_TOKENS,
 )
 from app.models.intent import ParsedIntent
 from app.prompts.intent_prompts import INTENT_SYSTEM_PROMPT
@@ -35,6 +36,7 @@ class IntentAgent(BaseAgent):
             system_prompt=INTENT_SYSTEM_PROMPT,
             user_prompt=user_prompt,
             response_model=ParsedIntent,
+            max_output_tokens=LLM_INTENT_MAX_OUTPUT_TOKENS,
         )
         parsed_intent.target_datasets = self._sanitize_target_datasets(
             parsed_intent.target_datasets
