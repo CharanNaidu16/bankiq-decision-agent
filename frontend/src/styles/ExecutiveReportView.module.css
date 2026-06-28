@@ -63,6 +63,9 @@
   margin: 6px 0 0;
   font-size: 15.5px;
   color: var(--color-text);
+  /* Preserve line breaks so multi-line answers (e.g. the per-zone overview)
+     render as separate lines instead of one collapsed paragraph. */
+  white-space: pre-wrap;
 }
 
 .headlineGrid {

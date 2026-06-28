@@ -10,16 +10,16 @@ interface QuestionInputProps {
 }
 
 /**
- * Pre-written example questions. The first gives a cross-zone overview so a new
- * user can see the landscape before drilling in; the rest investigate the three
- * distinct planted scenarios (a staffing crisis, a fraud/compliance crisis, and
- * a positive turnaround) across different zones.
+ * Pre-written example questions. The first three investigate the distinct
+ * planted scenarios (a staffing crisis, a fraud/compliance crisis, and a
+ * positive turnaround) across different zones; the last offers a cross-zone
+ * overview for users who want the big picture.
  */
 const EXAMPLE_QUESTIONS: ReadonlyArray<string> = [
-  "Give me an overview of all zones in 2025 — which are healthy, which are at risk, and which improved?",
   "Why did our loan approval rate drop 18% in the South zone last quarter?",
   "What caused the Southeast zone's fraud and compliance problems in Q4 2025?",
   "What drove the turnaround and improvement in the Northwest zone during 2025?",
+  "Give me a 2025 performance overview across all zones — which improved and which need attention?",
 ];
 
 /**
