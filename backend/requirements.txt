@@ -1,4 +1,4 @@
-# Pinned runtime dependencies for the BankIQ backend.
+# Pinned runtime dependencies for the Enterprise Decision Analysis Agent backend.
 # Mirrors the [project.dependencies] table in pyproject.toml.
 fastapi>=0.111
 uvicorn[standard]>=0.30

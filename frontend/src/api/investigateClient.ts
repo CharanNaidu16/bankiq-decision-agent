@@ -1,5 +1,5 @@
 /**
- * SSE client for the BankIQ investigate endpoint.
+ * SSE client for the Enterprise Decision Analysis Agent investigate endpoint.
  *
  * The browser `EventSource` API cannot send a POST body, so we use `fetch` with
  * a streamed `ReadableStream` and parse the Server-Sent Events frames manually.
@@ -49,7 +49,7 @@ export async function startInvestigation(
       signal,
     });
   } catch (error) {
-    handlers.onError(`Could not reach BankIQ backend: ${String(error)}`);
+    handlers.onError(`Could not reach Enterprise Decision Analysis Agent backend: ${String(error)}`);
     handlers.onDone();
     return;
   }

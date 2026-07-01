@@ -1,4 +1,4 @@
-"""Sequential orchestration of the five BankIQ agents with live progress.
+"""Sequential orchestration of the five Enterprise Decision Analysis Agent agents with live progress.
 
 The pipeline runs Intent -> Data Analyst -> Root Cause -> Impact Forecast ->
 Executive Report. It is an async generator: it yields an
@@ -290,7 +290,7 @@ class InvestigationPipeline:
             degraded = True
             answer = DirectAnswer(
                 answer=(
-                    "BankIQ could not retrieve the data to answer this question. "
+                    "Enterprise Decision Analysis Agent could not retrieve the data to answer this question. "
                     "Verify the datasets are generated and the GROQ_API_KEY is set, "
                     "then retry."
                 ),
@@ -302,7 +302,7 @@ class InvestigationPipeline:
             )
 
         yield self._build_direct_final_report(
-            question, answer, "BankIQ Quick Answer", path_started_at, degraded=degraded
+            question, answer, "Enterprise Decision Analysis Agent Quick Answer", path_started_at, degraded=degraded
         )
 
     async def _run_general_answer(self, question: str) -> AsyncIterator[PipelineYield]:
@@ -340,7 +340,7 @@ class InvestigationPipeline:
             )
 
         yield self._build_direct_final_report(
-            question, answer, "BankIQ Assistant", path_started_at, degraded=degraded
+            question, answer, "Enterprise Decision Analysis Agent Assistant", path_started_at, degraded=degraded
         )
 
     async def _run_rejection(self, question: str) -> AsyncIterator[PipelineYield]:
@@ -390,11 +390,11 @@ class InvestigationPipeline:
         started_at = time.perf_counter()
         answer = DirectAnswer(
             answer=SERVICE_UNAVAILABLE_MESSAGE,
-            headline="BankIQ is temporarily unavailable",
+            headline="Enterprise Decision Analysis Agent is temporarily unavailable",
             degraded=True,
         )
         yield self._build_direct_final_report(
-            question, answer, "BankIQ Temporarily Unavailable", started_at, degraded=True
+            question, answer, "Enterprise Decision Analysis Agent Temporarily Unavailable", started_at, degraded=True
         )
 
     @staticmethod
@@ -621,7 +621,7 @@ class InvestigationPipeline:
             else "Detailed analysis was unavailable."
         )
         return ExecutiveReport(
-            title="BankIQ Investigation (Degraded)",
+            title="Enterprise Decision Analysis Agent Investigation (Degraded)",
             executive_summary=(
                 "The investigation completed in degraded mode. "
                 f"{root_cause_text} {exposure_text}"
@@ -636,7 +636,7 @@ class InvestigationPipeline:
             recommended_actions=[],
             confidence_statement="Low confidence: produced from partial results.",
             degraded_notice=(
-                "BankIQ could not fully complete this investigation. Verify the "
+                "Enterprise Decision Analysis Agent could not fully complete this investigation. Verify the "
                 "GROQ_API_KEY is configured and the datasets are generated, then retry."
             ),
         )

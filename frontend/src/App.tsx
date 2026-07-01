@@ -7,7 +7,7 @@ import { useInvestigation } from "./hooks/useInvestigation";
 import styles from "./styles/App.module.css";
 
 /**
- * Render the BankIQ single-page application.
+ * Render the Enterprise Decision Analysis Agent single-page application.
  *
  * @returns The application root element.
  */
@@ -21,7 +21,7 @@ export default function App(): JSX.Element {
         <div className={styles.brand}>
           <span className={styles.logo}>◆</span>
           <div>
-            <h1 className={styles.productName}>BankIQ</h1>
+            <h1 className={styles.productName}>Enterprise Decision Analysis Agent</h1>
             <p className={styles.tagline}>Enterprise Decision Intelligence Agent</p>
           </div>
         </div>
@@ -51,7 +51,7 @@ export default function App(): JSX.Element {
               ) : (
                 <div className={styles.placeholder}>
                   <div className={styles.pulse} />
-                  <p>BankIQ is investigating your question…</p>
+                  <p>Enterprise Decision Analysis Agent is investigating your question…</p>
                 </div>
               )}
             </div>
@@ -60,7 +60,7 @@ export default function App(): JSX.Element {
       </main>
 
       <footer className={styles.footer}>
-        BankIQ runs on Groq · synthetic data · for demonstration purposes
+        Enterprise Decision Analysis Agent runs on Groq · synthetic data · for demonstration purposes
       </footer>
     </div>
   );

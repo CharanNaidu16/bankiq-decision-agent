@@ -1,4 +1,4 @@
-"""Structured, colorized logging for BankIQ powered by Rich.
+"""Structured, colorized logging for Enterprise Decision Analysis Agent powered by Rich.
 
 A single :func:`configure_logging` call installs a :class:`RichHandler` on the
 root logger, and :func:`get_logger` hands out namespaced loggers. Agents log
@@ -44,7 +44,7 @@ _is_logging_configured: bool = False
 
 
 def configure_logging(level: int = _DEFAULT_LOG_LEVEL) -> None:
-    """Install the Rich logging handler on the BankIQ root logger.
+    """Install the Rich logging handler on the Enterprise Decision Analysis Agent root logger.
 
     Idempotent: repeated calls do not stack handlers.
 

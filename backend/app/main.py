@@ -1,4 +1,4 @@
-"""FastAPI application entry point for the BankIQ backend.
+"""FastAPI application entry point for the Enterprise Decision Analysis Agent backend.
 
 Wires together logging, CORS, and the API router, and performs a light startup
 readiness check (warns if the datasets have not been generated yet). Run with:
@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     if not settings.is_llm_configured:
         _logger.warning(
-            "GROQ_API_KEY is not set. BankIQ will return degraded reports until "
+            "GROQ_API_KEY is not set. Enterprise Decision Analysis Agent will return degraded reports until "
             "a key is configured in the .env file."
         )
     if not repository.all_datasets_present():
@@ -49,9 +49,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             "`python scripts/generate_synthetic_data.py` before investigating.",
             settings.data_dir,
         )
-    _logger.info("BankIQ backend v%s ready (model=%s).", __version__, settings.groq_model)
+    _logger.info("Enterprise Decision Analysis Agent backend v%s ready (model=%s).", __version__, settings.groq_model)
     yield
-    _logger.info("BankIQ backend shutting down.")
+    _logger.info("Enterprise Decision Analysis Agent backend shutting down.")
 
 
 def create_application() -> FastAPI:
@@ -62,7 +62,7 @@ def create_application() -> FastAPI:
     """
     settings = get_settings()
     application = FastAPI(
-        title="BankIQ — Enterprise Decision Intelligence Agent",
+        title="Enterprise Decision Analysis Agent — Enterprise Decision Intelligence Agent",
         description=(
             "Autonomous five-agent investigation of banking KPI anomalies with "
             "causal evidence chains, financial impact, and board-ready reports."

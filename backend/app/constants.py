@@ -1,4 +1,4 @@
-"""Centralized, immutable constants for the BankIQ backend.
+"""Centralized, immutable constants for the Enterprise Decision Analysis Agent backend.
 
 Every threshold, canonical name, and magic number used across the application
 lives here so that business logic never embeds bare literals. Anything that is
@@ -45,7 +45,7 @@ AGENT_DISPLAY_NAMES: Final[dict[str, str]] = {
     AGENT_NAME_EXECUTIVE_REPORT: "Executive Report Agent",
     AGENT_NAME_TRIAGE: "Triage Router",
     AGENT_NAME_SIMPLE_QUERY: "Quick Answer",
-    AGENT_NAME_GENERAL_ASSISTANT: "BankIQ Assistant",
+    AGENT_NAME_GENERAL_ASSISTANT: "Enterprise Decision Analysis Agent Assistant",
 }
 
 # ---------------------------------------------------------------------------
@@ -201,28 +201,28 @@ SSE_EVENT_ERROR: Final[str] = "error"
 # to delete/modify/write data, change the app/code/config, or override the
 # system's instructions).
 REJECTION_MESSAGE: Final[str] = (
-    "BankIQ is a read-only banking analytics assistant. It cannot modify, "
+    "Enterprise Decision Analysis Agent is a read-only banking analytics assistant. It cannot modify, "
     "delete, or write data, change the application or its configuration, or "
     "follow instructions that override its operating rules. Please ask a "
-    "question about the banking KPIs and datasets, and BankIQ will investigate."
+    "question about the banking KPIs and datasets, and Enterprise Decision Analysis Agent will investigate."
 )
 
 # Returned for general questions that fall outside banking, finance, and
 # economics. The general-assistant agent is instructed to answer with this.
 OUT_OF_SCOPE_DECLINE_MESSAGE: Final[str] = (
-    "That question is outside BankIQ's area. BankIQ helps with banking, "
+    "That question is outside Enterprise Decision Analysis Agent's area. Enterprise Decision Analysis Agent helps with banking, "
     "finance, and economics — for example loan performance, NPS, churn, NPA, "
-    "and the drivers behind KPI movements. Ask about one of those and BankIQ "
+    "and the drivers behind KPI movements. Ask about one of those and Enterprise Decision Analysis Agent "
     "will help."
 )
 
 # Returned when the triage step itself cannot run because the language model is
 # unavailable (e.g. rate-limited, quota exhausted, or misconfigured). In that
 # state we have no classification signal, so rather than fan out to the full
-# five-agent pipeline — which would fire five more doomed LLM calls — BankIQ
+# five-agent pipeline — which would fire five more doomed LLM calls — Enterprise Decision Analysis Agent
 # returns this single, honest message and asks the user to retry.
 SERVICE_UNAVAILABLE_MESSAGE: Final[str] = (
-    "BankIQ could not process this request right now because its language model "
+    "Enterprise Decision Analysis Agent could not process this request right now because its language model "
     "is temporarily unavailable — usually a rate limit or exhausted API quota. "
     "Please wait a moment and try again. If this keeps happening, check the "
     "GROQ_API_KEY and model quota in the server configuration."

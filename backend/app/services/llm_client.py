@@ -1,6 +1,6 @@
 """Groq LLM client and structured-output helper.
 
-This module is the single seam between BankIQ and the Groq API. Groq exposes an
+This module is the single seam between Enterprise Decision Analysis Agent and the Groq API. Groq exposes an
 OpenAI-compatible endpoint, so we use the official ``openai`` SDK with the
 ``base_url`` pointed at Groq. Swapping models or providers should only ever
 require touching this file plus ``config.py``.

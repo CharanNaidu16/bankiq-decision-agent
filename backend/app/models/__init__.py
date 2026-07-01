@@ -1,4 +1,4 @@
-"""Pydantic contract models — the typed bus between BankIQ agents.
+"""Pydantic contract models — the typed bus between Enterprise Decision Analysis Agent agents.
 
 Re-exported here so callers can ``from app.models import ParsedIntent`` etc.
 """

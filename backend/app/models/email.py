@@ -47,7 +47,7 @@ class SendReportRequest(BaseModel):
 
     recipients: list[str] = Field(min_length=1)
     cc: list[str] = Field(default_factory=list)
-    subject: str = Field(default="BankIQ Investigation Report", max_length=200)
+    subject: str = Field(default="Enterprise Decision Analysis Agent Investigation Report", max_length=200)
     body: str = Field(min_length=1, max_length=100_000)
 
     @field_validator("recipients", "cc")

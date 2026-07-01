@@ -1,4 +1,4 @@
-"""The five BankIQ agents and their shared base class.
+"""The five Enterprise Decision Analysis Agent agents and their shared base class.
 
 Every agent is stateless: it receives a typed input, calls the LLM through the
 shared client, and returns a typed Pydantic result. The pipeline orchestrates

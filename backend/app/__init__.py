@@ -1,6 +1,6 @@
-"""BankIQ backend application package.
+"""Enterprise Decision Analysis Agent backend application package.
 
-BankIQ is an enterprise decision-intelligence agent for banking. It runs a
+Enterprise Decision Analysis Agent is an enterprise decision-intelligence agent for banking. It runs a
 five-agent pipeline (intent -> data analysis -> root cause -> impact forecast ->
 executive report) over seven synthetic banking datasets and streams progress to
 the frontend over Server-Sent Events.

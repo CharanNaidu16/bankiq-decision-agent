@@ -1,4 +1,4 @@
-"""Shared base class for the five BankIQ agents.
+"""Shared base class for the five Enterprise Decision Analysis Agent agents.
 
 Provides the common machinery every agent needs — a handle to the Groq client,
 namespaced logging, and a typed LLM invocation helper — while leaving each

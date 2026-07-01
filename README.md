@@ -1,4 +1,4 @@
-# BankIQ — Enterprise Decision Intelligence Agent for Banking
+# Enterprise Decision Analysis Agent — Decision Intelligence for Banking
 
 > Ask a banking question in plain English. A triage router decides how to answer it:
 > a genuine KPI investigation sends five autonomous agents across seven datasets to
@@ -6,7 +6,7 @@
 > deliver a board-ready executive report — streamed live. Simpler questions take
 > cheaper paths, and unsafe requests are refused.
 
-BankIQ turns a one-line question from a CEO or COO —
+Enterprise Decision Analysis Agent turns a one-line question from a CEO or COO —
 
 > *"Why did our loan approval rate drop 18% in the South zone last quarter?"*
 
@@ -22,7 +22,7 @@ declined by a read-only guardrail.
 Banking leaders see a KPI move and need to know **why**, **how much it will cost**,
 and **what to do** — fast, and with evidence. Today that means days of analyst work
 stitching together loan, customer, branch, staffing, risk, product, and event data.
-BankIQ automates that investigation as a pipeline of specialized LLM agents that
+Enterprise Decision Analysis Agent automates that investigation as a pipeline of specialized LLM agents that
 reason over the data and produce an executive narrative with a quantified causal
 chain, not just a dashboard.
 
@@ -87,7 +87,7 @@ chain, not just a dashboard.
 - **Graceful degradation.** Any agent failure is caught, logged with Rich, surfaced
   as a `failed` event, and replaced by a typed degraded result — the client always
   receives a report, never a raw 500. If the triage call itself can't run (the LLM is
-  rate-limited or misconfigured), BankIQ returns one honest "temporarily unavailable"
+  rate-limited or misconfigured), Enterprise Decision Analysis Agent returns one honest "temporarily unavailable"
   report instead of fanning out to five more doomed LLM calls.
 - **Share-ready output.** A finished report can be copied to the clipboard or emailed
   directly from the UI to one or more recipients (with Cc) via a configured SMTP
@@ -105,7 +105,7 @@ UI — is identical regardless of which path ran.
 |-----------------|-----------------------------|------------------------------------------------------------------|---------------|
 | `investigation` | Full five-agent pipeline    | Intent → Data Analyst → Root Cause → Impact Forecast → Exec Report | ~6 LLM calls  |
 | `simple_query`  | Quick Answer                | Intent (to scope the slice) → single data-grounded answer        | ~2 LLM calls  |
-| `out_of_scope`  | BankIQ Assistant            | One LLM call; answers banking/finance/economics, declines the rest | 1 LLM call    |
+| `out_of_scope`  | Enterprise Decision Analysis Agent Assistant            | One LLM call; answers banking/finance/economics, declines the rest | 1 LLM call    |
 | `rejected`      | Refusal                     | No further LLM calls; fixed read-only guardrail message          | 0 extra calls |
 
 When a banking question is genuinely ambiguous between `investigation` and
@@ -153,7 +153,7 @@ uvicorn app.main:app --reload          # http://127.0.0.1:8000
 > **Optional — emailing reports.** To enable the "Email report" button, also set the
 > `SMTP_*` values in `.env` (for Gmail, use your address as `SMTP_USERNAME` and a
 > 16-character **App Password** as `SMTP_PASSWORD`). Leave them blank to run without
-> email — the rest of BankIQ is unaffected and the button simply stays hidden.
+> email — the rest of Enterprise Decision Analysis Agent is unaffected and the button simply stays hidden.
 
 ### 2. Frontend
 
@@ -165,7 +165,7 @@ npm run dev                            # http://localhost:5173  (proxies /api �
 
 Open http://localhost:5173 and ask a question.
 
-> **No API key?** BankIQ still runs and returns a clearly-labeled *degraded* report
+> **No API key?** Enterprise Decision Analysis Agent still runs and returns a clearly-labeled *degraded* report
 > instead of crashing, so the UI and pipeline can be demonstrated end to end.
 
 ---
@@ -192,7 +192,7 @@ test. Northwest exercises the positive/improvement path.
 
 The five scenarios below are full **investigations**. To see the other routing paths,
 try a factual lookup like *"What was the NPS in North in Q2 2025?"* (Quick Answer), a
-concept question like *"What is NPA?"* (BankIQ Assistant), or a write attempt like
+concept question like *"What is NPA?"* (Enterprise Decision Analysis Agent Assistant), or a write attempt like
 *"Delete all loan records for the North zone."* (refused by the read-only guardrail).
 
 ### 1. Approval-rate drop (the headline scenario)
@@ -246,7 +246,7 @@ positive trajectory, not just failures.
 ## Sample report output (abridged)
 
 ```
-BankIQ Investigation — South Zone Loan Approval Decline
+Enterprise Decision Analysis Agent Investigation — South Zone Loan Approval Decline
 =======================================================
 EXECUTIVE SUMMARY
 South zone loan approvals fell ~18% in Q3 2025 (Personal Loans −31%), driven by the

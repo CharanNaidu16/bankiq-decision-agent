@@ -1,4 +1,4 @@
-"""Domain-specific exception hierarchy for the BankIQ backend.
+"""Domain-specific exception hierarchy for the Enterprise Decision Analysis Agent backend.
 
 A small, explicit hierarchy lets the pipeline distinguish recoverable agent
 failures (which trigger graceful degradation) from configuration/data problems
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 
 class BankIqError(Exception):
-    """Base class for all BankIQ application errors."""
+    """Base class for all Enterprise Decision Analysis Agent application errors."""
 
 
 class DatasetNotFoundError(BankIqError):

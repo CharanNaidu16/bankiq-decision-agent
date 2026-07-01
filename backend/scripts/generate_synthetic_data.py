@@ -1,4 +1,4 @@
-"""Standalone generator for BankIQ's seven synthetic banking datasets.
+"""Standalone generator for Enterprise Decision Analysis Agent's seven synthetic banking datasets.
 
 Run this once before starting the backend:
 
@@ -621,7 +621,7 @@ def _print_summary(frames: dict[str, pd.DataFrame]) -> None:
     Args:
         frames: Mapping of file name to generated DataFrame.
     """
-    table = Table(title="BankIQ synthetic datasets generated", show_lines=False)
+    table = Table(title="Enterprise Decision Analysis Agent synthetic datasets generated", show_lines=False)
     table.add_column("Dataset", style="cyan", no_wrap=True)
     table.add_column("Rows", justify="right", style="green")
     table.add_column("Columns", style="magenta")
@@ -650,7 +650,7 @@ def _print_summary(frames: dict[str, pd.DataFrame]) -> None:
 def main() -> None:
     """Generate all seven datasets and write them to ``backend/data/``."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    console.rule("[bold cyan]Generating BankIQ synthetic banking datasets")
+    console.rule("[bold cyan]Generating Enterprise Decision Analysis Agent synthetic banking datasets")
 
     product_performance = _build_product_performance()
     loan_performance = _build_loan_performance(product_performance)

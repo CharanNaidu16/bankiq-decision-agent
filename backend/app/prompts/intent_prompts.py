@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Final
 
 INTENT_SYSTEM_PROMPT: Final[str] = """\
-You are the Intent Agent of BankIQ, an enterprise decision-intelligence system for a \
+You are the Intent Agent of Enterprise Decision Analysis Agent, an enterprise decision-intelligence system for a \
 retail bank. Your job is to parse a senior executive's plain-English question about a \
 banking KPI anomaly into a precise, structured investigation scope.
 

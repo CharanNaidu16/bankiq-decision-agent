@@ -1,4 +1,4 @@
-"""Runtime configuration for the BankIQ backend.
+"""Runtime configuration for the Enterprise Decision Analysis Agent backend.
 
 All operator-tunable settings (API keys, model id, host/port, CORS origins) are
 loaded here from environment variables / a ``.env`` file via pydantic-settings.
@@ -69,7 +69,7 @@ class Settings(BaseSettings):
     smtp_port: int = Field(default=587, alias="SMTP_PORT", gt=0, lt=65536)
     smtp_username: str = Field(default="", alias="SMTP_USERNAME")
     smtp_password: str = Field(default="", alias="SMTP_PASSWORD")
-    smtp_from_name: str = Field(default="BankIQ", alias="SMTP_FROM_NAME")
+    smtp_from_name: str = Field(default="Enterprise Decision Analysis Agent", alias="SMTP_FROM_NAME")
     smtp_timeout_seconds: float = Field(
         default=30.0, alias="SMTP_TIMEOUT_SECONDS", gt=0.0
     )

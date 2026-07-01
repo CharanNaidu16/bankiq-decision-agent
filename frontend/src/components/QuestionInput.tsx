@@ -47,7 +47,7 @@ export function QuestionInput({ isRunning, onSubmit }: QuestionInputProps): JSX.
   return (
     <section className={styles.panel}>
       <label className={styles.label} htmlFor="bankiq-question">
-        Ask BankIQ about a banking KPI anomaly
+        Ask Enterprise Decision Analysis Agent about a banking KPI anomaly
       </label>
       <textarea
         id="bankiq-question"
